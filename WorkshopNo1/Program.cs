@@ -3,13 +3,13 @@ using WorkshopNo1.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var configuartion = builder.Configuration;
+var configuration = builder.Configuration; // get configuration from appsettings.json
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options => 
-    options.UseNpgsql(configuartion.GetConnectionString("ConnectionString")));
+    options.UseNpgsql(configuration.GetConnectionString("ConnectionString"))); // get connection string from appsettings.Development.json
 
 var app = builder.Build();
 
