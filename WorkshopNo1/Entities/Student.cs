@@ -2,9 +2,8 @@
 
 namespace WorkshopNo1.Entities;
 
-public class Student
+public class Student : Entity
 {
-    public string Id { get; private  set; }
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
 
@@ -22,7 +21,6 @@ public class Student
 
         return new Student
         {
-            Id = Guid.NewGuid().ToString(),
             FirstName = firstName,
             LastName = lastName
         };
@@ -45,6 +43,6 @@ public class Student
 
         LastName = lastName;
     }
-    
+
 
 }

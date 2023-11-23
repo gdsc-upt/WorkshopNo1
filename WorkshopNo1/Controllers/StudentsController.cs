@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WorkshopNo1.Entities;
+using WorkshopNo1.Repository;
 
 namespace WorkshopNo1.Controllers;
 
@@ -7,26 +9,33 @@ namespace WorkshopNo1.Controllers;
 [ApiController]
 public class StudentsController : ControllerBase
 {
-    private static readonly List<Student> _list = new()
+    private readonly AppDbContext _dbcontext;
+
+    public StudentsController(AppDbContext dbcontext)
     {
-        Student.Create("Percic", "Dan"),
-        Student.Create("Dobre", "Andrei")
-    };
+        _dbcontext = dbcontext;
+    }
+
 
     [HttpGet(Name = "GetAllStudents")]
     public ActionResult GetStudents()
     {
-        return Ok(_list);
+        var studenti = _dbcontext.Set<Student>().ToList();
+        
+        return Ok(studenti);
     }
 
     [HttpGet( "{Id}")]
     public ActionResult GetStudents(string Id)
     {
-        var student = _list.FirstOrDefault(s => s.Id == Id);
+        var student = _dbcontext.Students
+            .Where(studenti => studenti.Id == Id)
+            .OrderBy(student => student.FirstName)
+            .FirstOrDefault();
 
         if (student is null)
-            return NotFound($"Student with id: {Id} does not exist");
-
+            return NotFound($"student with id: {Id} was not found");
+        
         return Ok(student);
     }
     
@@ -42,29 +51,34 @@ public class StudentsController : ControllerBase
         {
             return BadRequest(e.Message);
         }
+
+        _dbcontext.Add(student);
+        _dbcontext.SaveChanges();
         
-        
-        _list.Add(student);
-        return Ok(studentRequest);
+        return Ok(student);
     }
 
+    
     [HttpDelete("{Id}")]
     public ActionResult RemoveStudent(string Id)
     {
-        var student = _list.FirstOrDefault(s => s.Id == Id);
+        var student = _dbcontext.Students
+            .FirstOrDefault(s => s.Id == Id);
 
         if (student is null)
             return NotFound($"Student with id: {Id} does not exist");
 
-        _list.Remove(student);
+        _dbcontext.Remove(student);
+        _dbcontext.SaveChanges();
 
         return Ok($"Student with id: {Id} was removed");
     }
     
+    
     [HttpPatch("{Id}")]
     public ActionResult UpdateStudentFisrtName(string Id, [FromBody] string firstName)
     {
-        var student = _list.FirstOrDefault(s => s.Id == Id);
+        var student = _dbcontext.Students.FirstOrDefault(s => s.Id == Id);
 
         if (student is null)
             return NotFound($"Student with id: {Id} does not exist");
@@ -78,13 +92,15 @@ public class StudentsController : ControllerBase
             return BadRequest(e.Message);
         }
 
+        _dbcontext.SaveChanges();
+
         return Ok(student);
     }
     
     [HttpPut("{Id}")]
     public ActionResult UpdateStudent(string Id, [FromBody]StudentRequest studentRequest)
     {
-        var student = _list.FirstOrDefault(s => s.Id == Id);
+        var student = _dbcontext.Students.FirstOrDefault(s => s.Id == Id);
 
         if (student is null)
             return NotFound($"Student with id: {Id} does not exist");
@@ -98,8 +114,8 @@ public class StudentsController : ControllerBase
         {
             return BadRequest(e.Message);
         }
-        
 
+        _dbcontext.SaveChanges();
         return Ok(student);
     }
     

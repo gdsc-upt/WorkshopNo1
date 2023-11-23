@@ -31,3 +31,14 @@ E:\PC\Learn\Programing\C#\Web\WorkshopNo1\WorkshopNo1\obj\Debug\net7.0\refint\Wo
 E:\PC\Learn\Programing\C#\Web\WorkshopNo1\WorkshopNo1\obj\Debug\net7.0\WorkshopNo1.pdb
 E:\PC\Learn\Programing\C#\Web\WorkshopNo1\WorkshopNo1\obj\Debug\net7.0\WorkshopNo1.genruntimeconfig.cache
 E:\PC\Learn\Programing\C#\Web\WorkshopNo1\WorkshopNo1\obj\Debug\net7.0\ref\WorkshopNo1.dll
+E:\PC\Learn\Programing\C#\Web\WorkshopNo1\WorkshopNo1\bin\Debug\net7.0\Microsoft.EntityFrameworkCore.dll
+E:\PC\Learn\Programing\C#\Web\WorkshopNo1\WorkshopNo1\bin\Debug\net7.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+E:\PC\Learn\Programing\C#\Web\WorkshopNo1\WorkshopNo1\bin\Debug\net7.0\Microsoft.EntityFrameworkCore.Relational.dll
+E:\PC\Learn\Programing\C#\Web\WorkshopNo1\WorkshopNo1\bin\Debug\net7.0\Npgsql.dll
+E:\PC\Learn\Programing\C#\Web\WorkshopNo1\WorkshopNo1\bin\Debug\net7.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+E:\PC\Learn\Programing\C#\Web\WorkshopNo1\WorkshopNo1\bin\Debug\net7.0\Humanizer.dll
+E:\PC\Learn\Programing\C#\Web\WorkshopNo1\WorkshopNo1\bin\Debug\net7.0\Microsoft.EntityFrameworkCore.Design.dll
+E:\PC\Learn\Programing\C#\Web\WorkshopNo1\WorkshopNo1\bin\Debug\net7.0\Microsoft.Extensions.DependencyModel.dll
+E:\PC\Learn\Programing\C#\Web\WorkshopNo1\WorkshopNo1\bin\Debug\net7.0\Mono.TextTemplating.dll
+E:\PC\Learn\Programing\C#\Web\WorkshopNo1\WorkshopNo1\bin\Debug\net7.0\System.CodeDom.dll
+E:\PC\Learn\Programing\C#\Web\WorkshopNo1\WorkshopNo1\bin\Debug\net7.0\appsettings.template.Development.json
