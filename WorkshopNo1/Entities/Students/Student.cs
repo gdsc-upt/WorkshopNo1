@@ -1,20 +1,33 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using WorkshopNo1.Entities.Faculties;
+using WorkshopNo1.Repository;
 
-namespace WorkshopNo1.Entities;
+namespace WorkshopNo1.Entities.Students;
 
 public class Student : Entity
 {
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
+    public string Email { get; set; }
+    public Faculty Faculty { get; set; }
 
     private Student()
     {
     }
     
-    public static Student Create(string firstName, string lastName)
+    public static async Task<Student> CreateAsync(
+        IStudentRepository _repo,
+        Faculty faculty,
+        string firstName,
+        string lastName,
+        string email)
     {
+        if (!await _repo.IsEmilUniqe(email))
+        {
+            throw new Exception("this email is already used by another student");
+        }
+
         if (string.IsNullOrWhiteSpace(firstName))
-            throw new Exception("Fisrt Name can't be empty");
+            throw new Exception("First Name can't be empty");
         
         if (string.IsNullOrWhiteSpace(lastName))
             throw new Exception("Last Name can't be empty");
@@ -22,7 +35,9 @@ public class Student : Entity
         return new Student
         {
             FirstName = firstName,
-            LastName = lastName
+            LastName = lastName,
+            Email = email,
+            Faculty = faculty
         };
     }
 
@@ -45,4 +60,8 @@ public class Student : Entity
     }
 
 
+    public void SetEmail(string studentRequestEmail)
+    {
+        Email = studentRequestEmail;
+    }
 }

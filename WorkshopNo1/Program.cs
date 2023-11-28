@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using WorkshopNo1.Entities.Students;
 using WorkshopNo1.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,8 +9,10 @@ var configuration = builder.Configuration; // get configuration from appsettings
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddDbContext<AppDbContext>(options => 
     options.UseNpgsql(configuration.GetConnectionString("ConnectionString"))); // get connection string from appsettings.Development.json
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 
 var app = builder.Build();
 

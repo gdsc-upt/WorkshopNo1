@@ -1,37 +1,39 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WorkshopNo1.Entities;
+using WorkshopNo1.Entities.Students;
 using WorkshopNo1.Repository;
 
-namespace WorkshopNo1.Controllers;
+namespace WorkshopNo1.Controllers.Students;
 
 [Route("students")]
 [ApiController]
 public class StudentsController : ControllerBase
 {
-    private readonly AppDbContext _dbcontext;
+    private readonly AppDbContext _dbcontext; // change the cod to work without AppDbContext class
+    private readonly IStudentRepository _repo;
 
-    public StudentsController(AppDbContext dbcontext)
+    public StudentsController(AppDbContext dbcontext, IStudentRepository repo)
     {
         _dbcontext = dbcontext;
+        _repo = repo;
     }
 
 
     [HttpGet(Name = "GetAllStudents")]
-    public ActionResult GetStudents()
+    public async Task<ActionResult> GetStudents()
     {
-        var studenti = _dbcontext.Set<Student>().ToList();
+        var studenti = await _dbcontext.Set<Student>().ToListAsync();
         
         return Ok(studenti);
     }
 
     [HttpGet( "{Id}")]
-    public ActionResult GetStudents(string Id)
+    public async Task<ActionResult> GetStudents(string Id)
     {
-        var student = _dbcontext.Students
+        var student = await _dbcontext.Students
             .Where(studenti => studenti.Id == Id)
             .OrderBy(student => student.FirstName)
-            .FirstOrDefault();
+            .FirstOrDefaultAsync();
 
         if (student is null)
             return NotFound($"student with id: {Id} was not found");
@@ -40,12 +42,23 @@ public class StudentsController : ControllerBase
     }
     
     [HttpPost]
-    public ActionResult CreateStudent([FromBody] StudentRequest studentRequest)
+    public async Task<ActionResult> CreateStudent([FromBody] StudentRequest studentRequest)
     {
+        var faculty = await _dbcontext.Faculties
+            .FirstOrDefaultAsync(f => f.Id == studentRequest.FacultyId);
+
+        if (faculty is null)
+            return NotFound($"faculty with id: {studentRequest.FacultyId} was not found");
+        
         Student student = null;
         try
         {
-            student = Student.Create(studentRequest.FirstName, studentRequest.LastName);
+            student = await Student.CreateAsync(
+                _repo,
+                faculty,
+                studentRequest.FirstName,
+                studentRequest.LastName, 
+                studentRequest.Email);
         }
         catch (Exception e)
         {
@@ -53,14 +66,22 @@ public class StudentsController : ControllerBase
         }
 
         _dbcontext.Add(student);
-        _dbcontext.SaveChanges();
         
-        return Ok(student);
+        await _dbcontext.SaveChangesAsync();
+        
+        return Ok(new StudentResponse
+        {
+            Id = student.Id,
+            Email = student.Email,
+            FirstName = student.FirstName,
+            LastName = student.LastName,
+            FacultyId = faculty.Id
+        });
     }
 
     
     [HttpDelete("{Id}")]
-    public ActionResult RemoveStudent(string Id)
+    public async Task<ActionResult> RemoveStudent(string Id)
     {
         var student = _dbcontext.Students
             .FirstOrDefault(s => s.Id == Id);
@@ -69,14 +90,14 @@ public class StudentsController : ControllerBase
             return NotFound($"Student with id: {Id} does not exist");
 
         _dbcontext.Remove(student);
-        _dbcontext.SaveChanges();
+        await _dbcontext.SaveChangesAsync();
 
         return Ok($"Student with id: {Id} was removed");
     }
     
     
     [HttpPatch("{Id}")]
-    public ActionResult UpdateStudentFisrtName(string Id, [FromBody] string firstName)
+    public async Task<ActionResult> UpdateStudentFisrtName(string Id, [FromBody] string firstName)
     {
         var student = _dbcontext.Students.FirstOrDefault(s => s.Id == Id);
 
@@ -92,13 +113,13 @@ public class StudentsController : ControllerBase
             return BadRequest(e.Message);
         }
 
-        _dbcontext.SaveChanges();
+        await _dbcontext.SaveChangesAsync();
 
         return Ok(student);
     }
     
     [HttpPut("{Id}")]
-    public ActionResult UpdateStudent(string Id, [FromBody]StudentRequest studentRequest)
+    public async Task<ActionResult> UpdateStudent(string Id, [FromBody]StudentRequest studentRequest)
     {
         var student = _dbcontext.Students.FirstOrDefault(s => s.Id == Id);
 
@@ -109,13 +130,14 @@ public class StudentsController : ControllerBase
         {
             student.SetFirstName(studentRequest.FirstName);
             student.SetLastName(studentRequest.LastName);
+            student.SetEmail(studentRequest.Email);
         }
         catch (Exception e)
         {
             return BadRequest(e.Message);
         }
 
-        _dbcontext.SaveChanges();
+        await _dbcontext.SaveChangesAsync();
         return Ok(student);
     }
     
