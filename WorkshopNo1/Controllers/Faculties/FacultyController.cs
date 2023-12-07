@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using WorkshopNo1.Controllers.Students;
 using WorkshopNo1.Entities.Faculties;
 using WorkshopNo1.Repository;
+using WorkshopNo1.Services;
 
 namespace WorkshopNo1.Controllers.Faculties;
 
@@ -50,5 +51,11 @@ public class FacultyController : ControllerBase
         await _context.SaveChangesAsync();
 
         return Ok(faculty);
+    }
+
+    [HttpGet("random")]
+    public ActionResult GetRandom([FromServices] IRandomService service)
+    {
+        return Ok(service.GetRandomInt());
     }
 }

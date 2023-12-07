@@ -1,14 +1,18 @@
 ﻿using WorkshopNo1.Entities.Faculties;
+using WorkshopNo1.Entities.Subjects;
 using WorkshopNo1.Repository;
 
 namespace WorkshopNo1.Entities.Students;
 
 public class Student : Entity
 {
+    private int subjectLimit = 2;
+    
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
     public string Email { get; set; }
     public Faculty Faculty { get; set; }
+    public List<Subject> Subjects { get; set; }
 
     private Student()
     {
@@ -58,10 +62,20 @@ public class Student : Entity
 
         LastName = lastName;
     }
-
-
+    
     public void SetEmail(string studentRequestEmail)
     {
         Email = studentRequestEmail;
+    }
+
+    public void AddSubject(Subject subject)
+    {
+        if (Subjects.Any(s => s.SubjectName == subject.SubjectName))
+            throw new Exception("Student can't have the same subject twice");
+        
+        if (Subjects.Count >= subjectLimit)
+            throw new Exception("Student can't have more than 2 subjects");
+
+        Subjects.Add(subject);
     }
 }

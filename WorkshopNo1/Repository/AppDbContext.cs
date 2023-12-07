@@ -2,6 +2,7 @@
 using WorkshopNo1.Entities;
 using WorkshopNo1.Entities.Faculties;
 using WorkshopNo1.Entities.Students;
+using WorkshopNo1.Entities.Subjects;
 
 namespace WorkshopNo1.Repository;
 
@@ -19,4 +20,5 @@ public class AppDbContext : DbContext
     
     public DbSet<Student> Students { get; set; }
     public DbSet<Faculty> Faculties { get; set; }
+    public DbSet<Subject> Subjects { get; set; }
 }

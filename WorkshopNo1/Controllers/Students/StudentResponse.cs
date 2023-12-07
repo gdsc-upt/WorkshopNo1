@@ -7,4 +7,5 @@ public class StudentResponse
     public string LastName { get;  set; }
     public string Email { get; set; }
     public string FacultyId { get; set; }
+    public List<string> SubjectsName { get; set; }
 }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WorkshopNo1.Entities.Students;
 using WorkshopNo1.Repository;
+using WorkshopNo1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options => 
     options.UseNpgsql(configuration.GetConnectionString("ConnectionString"))); // get connection string from appsettings.Development.json
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+//builder.Services.AddScoped<IRandomService, RandomService>();
+builder.Services.AddSingleton<IRandomService, RandomService>();
 
 var app = builder.Build();
 

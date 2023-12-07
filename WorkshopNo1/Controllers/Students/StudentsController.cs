@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkshopNo1.Entities.Students;
+using WorkshopNo1.Entities.Subjects;
 using WorkshopNo1.Repository;
 
 namespace WorkshopNo1.Controllers.Students;
@@ -22,9 +23,17 @@ public class StudentsController : ControllerBase
     [HttpGet(Name = "GetAllStudents")]
     public async Task<ActionResult> GetStudents()
     {
-        var studenti = await _dbcontext.Set<Student>().ToListAsync();
+        var studenti = await _repo.GetAllAsync();
         
-        return Ok(studenti);
+        return Ok(studenti.Select(student => new StudentResponse
+        {
+            Id = student.Id,
+            Email = student.Email,
+            FirstName = student.FirstName,
+            LastName = student.LastName,
+            FacultyId = student.Faculty.Id,
+            SubjectsName = student.Subjects.Select(s => s.SubjectName).ToList()
+        }));
     }
 
     [HttpGet( "{Id}")]
@@ -116,6 +125,39 @@ public class StudentsController : ControllerBase
         await _dbcontext.SaveChangesAsync();
 
         return Ok(student);
+    }
+    
+    [HttpPatch("addSubject/{studentId}")]
+    public async Task<ActionResult> AddSubject(string studentId, 
+        [FromBody] string subjectName)
+    {
+        var student = _dbcontext.Students
+            .Include(s => s.Subjects)
+            .FirstOrDefault(s => s.Id == studentId);
+        
+        if (student is null)
+            return NotFound($"Student with id: {studentId} does not exist");
+
+        var subject = new Subject
+        {
+            SubjectName = subjectName
+        };
+
+        try
+        {
+            student.AddSubject(subject);
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+        
+        await _dbcontext.SaveChangesAsync();
+
+        return Ok(new StudentResponse
+        {
+            SubjectsName = student.Subjects.Select(s => s.SubjectName).ToList()
+        });
     }
     
     [HttpPut("{Id}")]
