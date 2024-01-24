@@ -3,10 +3,9 @@
 public interface IStudentRepository
 {
     Task<bool> IsEmilUniqe(string email);
-    // implememnt next methods: 
+    public Task<Student?> GetByIdAsync(string id, bool trackChanges);
     public Task<List<Student>> GetAllAsync();
-    // GetByIdAsync(string id);
-    // Create(Student student);
-    // Delete();
-    // SaveAsync();
+    public void Create(Student student);
+    public void Update(Student student);
+    public void Delete(Student student);
 }

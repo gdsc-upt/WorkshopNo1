@@ -6,5 +6,4 @@ public class Subject : Entity
 {
     public string SubjectName { get; set; }
     public List<Student> Students { get; set; } = new();
-    //please
 }

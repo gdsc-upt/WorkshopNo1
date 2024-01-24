@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using WorkshopNo1.Controllers.Students;
 using WorkshopNo1.Entities.Faculties;
 using WorkshopNo1.Repository;
 using WorkshopNo1.Services;
+using WorkshopNo1.Utils;
 
 namespace WorkshopNo1.Controllers.Faculties;
 
@@ -15,7 +17,7 @@ public class FacultyController : ControllerBase
     //implement Http - Get(id), Put, Patch and Delete
     //change the cod to work without AppDbContext class
     
-    public FacultyController(AppDbContext context)
+    public FacultyController(AppDbContext context, IOptions<EmailConfig> emailConfig)
     {
         _context = context;
     }

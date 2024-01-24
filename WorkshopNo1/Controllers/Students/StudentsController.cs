@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using WorkshopNo1.Entities.Students;
 using WorkshopNo1.Entities.Subjects;
 using WorkshopNo1.Repository;
+using WorkshopNo1.Services;
+using WorkshopNo1.Services.Students;
+using WorkshopNo1.Utils.ResultPattern;
 
 namespace WorkshopNo1.Controllers.Students;
 
@@ -10,178 +13,110 @@ namespace WorkshopNo1.Controllers.Students;
 [ApiController]
 public class StudentsController : ControllerBase
 {
-    private readonly AppDbContext _dbcontext; // change the cod to work without AppDbContext class
-    private readonly IStudentRepository _repo;
 
-    public StudentsController(AppDbContext dbcontext, IStudentRepository repo)
+    private readonly IStudentService _service;
+
+    public StudentsController(IStudentService service)
     {
-        _dbcontext = dbcontext;
-        _repo = repo;
+        _service = service;
     }
 
 
-    [HttpGet(Name = "GetAllStudents")]
-    public async Task<ActionResult> GetStudents()
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<StudentResponse>>> GetStudents()
     {
-        var studenti = await _repo.GetAllAsync();
+        Result<IEnumerable<Student>> result = await _service.GetAllAsync();
         
-        return Ok(studenti.Select(student => new StudentResponse
-        {
-            Id = student.Id,
-            Email = student.Email,
-            FirstName = student.FirstName,
-            LastName = student.LastName,
-            FacultyId = student.Faculty.Id,
-            SubjectsName = student.Subjects.Select(s => s.SubjectName).ToList()
-        }));
+        return Ok(result.Value.Select(Map));
     }
 
-    [HttpGet( "{Id}")]
-    public async Task<ActionResult> GetStudents(string Id)
+    [HttpGet( "{id}")]
+    public async Task<ActionResult<StudentResponse>> GetStudentById(string id)
     {
-        var student = await _dbcontext.Students
-            .Where(studenti => studenti.Id == Id)
-            .OrderBy(student => student.FirstName)
-            .FirstOrDefaultAsync();
-
-        if (student is null)
-            return NotFound($"student with id: {Id} was not found");
+        Result<Student> result = await _service.GetByIdAsync(id);
         
-        return Ok(student);
+        if(result.IsSucces)
+            return Ok(Map(result.Value));
+        
+        return NotFound(result.Error.Description);
     }
     
     [HttpPost]
-    public async Task<ActionResult> CreateStudent([FromBody] StudentRequest studentRequest)
+    public async Task<ActionResult<StudentResponse>> CreateStudent([FromBody] StudentRequest studentRequest)
     {
-        var faculty = await _dbcontext.Faculties
-            .FirstOrDefaultAsync(f => f.Id == studentRequest.FacultyId);
+        Result<Student> result = await _service.CreateAsync(studentRequest);
+        
+        if(result.IsSucces)
+            return Ok(Map(result.Value));
+        
+        if(result.Error.Type == ErrorType.NotFound)
+            return NotFound(result.Error.Description);
+        
+        return BadRequest(result.Error.Description);
+    }
 
-        if (faculty is null)
-            return NotFound($"faculty with id: {studentRequest.FacultyId} was not found");
+    
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> RemoveStudent(string id)
+    {
+        var result = await _service.DeleteAsync(id);
         
-        Student student = null;
-        try
-        {
-            student = await Student.CreateAsync(
-                _repo,
-                faculty,
-                studentRequest.FirstName,
-                studentRequest.LastName, 
-                studentRequest.Email);
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
+        if(result.IsFailure)
+            return NotFound(result.Error.Description);
+        
+        return NoContent();
+    }
+    
+    
+    [HttpPatch("{id}")]
+    public async Task<ActionResult<StudentResponse>> UpdateStudentFisrtName(string id, [FromBody] string firstName)
+    {
+        var studentRequest = new StudentRequestForUpdate(id, firstName, null, null);
 
-        _dbcontext.Add(student);
+        Result<Student> result = await _service.UpdateAsync(studentRequest);
+
+        if (result.IsSucces)
+            return Ok(Map(result.Value));
         
-        await _dbcontext.SaveChangesAsync();
+        if(result.Error.Type == ErrorType.NotFound)
+            return NotFound(result.Error.Description);
         
-        return Ok(new StudentResponse
+        return BadRequest(result.Error.Description);
+    }
+    
+    /* ToDo: implement AddSubject in StudentService
+    [HttpPatch("addSubject/{studentId}")]
+    public async Task<ActionResult<StudentResponse>> AddSubject(string studentId, 
+        [FromBody] string subjectId)
+    {
+      
+    }
+    */
+    
+    [HttpPut("{Id}")]
+    public async Task<ActionResult<StudentResponse>> UpdateStudent(string Id, [FromBody]StudentRequestForUpdate studentRequest)
+    {
+        var result = await _service.UpdateAsync(studentRequest);
+        
+        if(result.IsSucces)
+            return Ok(Map(result.Value));
+        
+        if(result.Error.Type == ErrorType.NotFound)
+            return NotFound(result.Error.Description);
+        
+        return BadRequest(result.Error.Description);
+    }
+    
+    
+    private StudentResponse Map(Student student)
+    {
+        return new StudentResponse
         {
             Id = student.Id,
             Email = student.Email,
             FirstName = student.FirstName,
             LastName = student.LastName,
-            FacultyId = faculty.Id
-        });
-    }
-
-    
-    [HttpDelete("{Id}")]
-    public async Task<ActionResult> RemoveStudent(string Id)
-    {
-        var student = _dbcontext.Students
-            .FirstOrDefault(s => s.Id == Id);
-
-        if (student is null)
-            return NotFound($"Student with id: {Id} does not exist");
-
-        _dbcontext.Remove(student);
-        await _dbcontext.SaveChangesAsync();
-
-        return Ok($"Student with id: {Id} was removed");
-    }
-    
-    
-    [HttpPatch("{Id}")]
-    public async Task<ActionResult> UpdateStudentFisrtName(string Id, [FromBody] string firstName)
-    {
-        var student = _dbcontext.Students.FirstOrDefault(s => s.Id == Id);
-
-        if (student is null)
-            return NotFound($"Student with id: {Id} does not exist");
-
-        try
-        {
-            student.SetFirstName(firstName);
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
-
-        await _dbcontext.SaveChangesAsync();
-
-        return Ok(student);
-    }
-    
-    [HttpPatch("addSubject/{studentId}")]
-    public async Task<ActionResult> AddSubject(string studentId, 
-        [FromBody] string subjectName)
-    {
-        var student = _dbcontext.Students
-            .Include(s => s.Subjects)
-            .FirstOrDefault(s => s.Id == studentId);
-        
-        if (student is null)
-            return NotFound($"Student with id: {studentId} does not exist");
-
-        var subject = new Subject
-        {
-            SubjectName = subjectName
+            FacultyId = student.Faculty.Id
         };
-
-        try
-        {
-            student.AddSubject(subject);
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
-        
-        await _dbcontext.SaveChangesAsync();
-
-        return Ok(new StudentResponse
-        {
-            SubjectsName = student.Subjects.Select(s => s.SubjectName).ToList()
-        });
     }
-    
-    [HttpPut("{Id}")]
-    public async Task<ActionResult> UpdateStudent(string Id, [FromBody]StudentRequest studentRequest)
-    {
-        var student = _dbcontext.Students.FirstOrDefault(s => s.Id == Id);
-
-        if (student is null)
-            return NotFound($"Student with id: {Id} does not exist");
-
-        try
-        {
-            student.SetFirstName(studentRequest.FirstName);
-            student.SetLastName(studentRequest.LastName);
-            student.SetEmail(studentRequest.Email);
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
-
-        await _dbcontext.SaveChangesAsync();
-        return Ok(student);
-    }
-    
-
 }

@@ -3,24 +3,29 @@ using WorkshopNo1.Entities.Students;
 
 namespace WorkshopNo1.Repository;
 
-public class StudentRepository : IStudentRepository
+public class StudentRepository : Repository<Student>, IStudentRepository
 {
-    private readonly AppDbContext _context;
-    public StudentRepository(AppDbContext context)
-    {
-        _context = context;
-    }
 
-    public async Task<bool> IsEmilUniqe(string email)
+    public StudentRepository(AppDbContext appDbContext) : base(appDbContext)
     {
-        return !await _context.Students.AnyAsync(s => s.Email == email);
+        
     }
-    
+    public Task<bool> IsEmilUniqe(string email) => 
+        FindByCondition(s => s.Email == email, false)
+        .AnyAsync();
+
+    public Task<Student?> GetByIdAsync(string id, bool trackChanges) => 
+        FindByCondition(s => s.Id == id, trackChanges)
+        .Include(s => s.Faculty)
+        .Include(s => s.Subjects)
+        .FirstOrDefaultAsync();
+
     public async Task<List<Student>> GetAllAsync()
     {
-        return await _context.Students
-            .Include(student => student.Faculty)
-            .Include(student => student.Subjects)
-            .ToListAsync();
+        var query = FindAll(false)
+            .Include(s => s.Faculty)
+            .Include(s => s.Subjects);
+
+        return await query.ToListAsync();
     }
 }
